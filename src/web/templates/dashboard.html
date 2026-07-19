@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NetGuard IDS Dashboard</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #0f172a;
+            color: #e2e8f0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .navbar {
+            background-color: #1e293b;
+            border-bottom: 1px solid #334155;
+        }
+        .card {
+            background-color: #1e293b;
+            border: 1px solid #334155;
+            margin-bottom: 20px;
+        }
+        .table {
+            color: #cbd5e1;
+        }
+        .severity-critical { color: #ef4444; font-weight: bold; }
+        .severity-high { color: #f97316; font-weight: bold; }
+        .severity-medium { color: #eab308; }
+        .severity-low { color: #3b82f6; }
+        
+        .header-status {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark mb-4">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">🛡️ NetGuard IDS <span class="badge bg-success header-status">ACTIVE</span></a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header bg-transparent border-bottom border-light">
+                        <h5>🚨 Live Threats Feed</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="alertsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Time</th>
+                                        <th>Severity</th>
+                                        <th>Type</th>
+                                        <th>Source</th>
+                                        <th>Message</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Rows will be populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function updateAlerts() {
+            fetch('/api/alerts')
+                .then(response => {
+                    if (response.status === 401) {
+                        window.location.href = '/login';
+                        return Promise.reject('Unauthorized');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const tbody = document.querySelector('#alertsTable tbody');
+                    tbody.innerHTML = ''; // Clear existing
+                    
+                    data.forEach(alert => {
+                        const row = document.createElement('tr');
+                        
+                        let severityClass = 'severity-low';
+                        if (alert.severity === 'critical') severityClass = 'severity-critical';
+                        else if (alert.severity === 'high') severityClass = 'severity-high';
+                        else if (alert.severity === 'medium') severityClass = 'severity-medium';
+
+                        row.innerHTML = `
+                            <td>${new Date(alert.timestamp).toLocaleTimeString()}</td>
+                            <td class="${severityClass}">${alert.severity.toUpperCase()}</td>
+                            <td>${alert.type}</td>
+                            <td>${alert.source_ip}</td>
+                            <td>${alert.message}</td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                })
+                .catch(err => console.error('Error fetching alerts:', err));
+        }
+
+        // Refresh every 2 seconds
+        setInterval(updateAlerts, 2000);
+        updateAlerts();
+    </script>
+</body>
+</html>
