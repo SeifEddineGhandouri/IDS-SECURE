@@ -198,7 +198,6 @@ Le rapport PDF peut résumer :
 
 ## 👨‍💻 Auteur
 Projet réalisé par **Seif Eddine Ghandouri**
-Université Tek-UP – Année universitaire 2025-2026
 
 ---
 
